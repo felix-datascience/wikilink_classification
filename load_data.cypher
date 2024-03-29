@@ -9,7 +9,7 @@ CALL n10s.graphconfig.init({
 	keepCustomDataTypes: false,
 	customDataTypePropList: [],
 	applyNeo4jNaming: false
-})
+});
 
 CALL n10s.rdf.import.fetch(
     "file:///var/lib/neo4j/raw_data/wikilinks_lang=en.ttl",
