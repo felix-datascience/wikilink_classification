@@ -66,7 +66,7 @@ else
     curl -L -O https://databus.dbpedia.org/ontologies/dbpedia.org/ontology--DEV/2022.12.09-011003/ontology--DEV_type=parsed.nt
 
     # Setup neo4j in ENROOT container
-    echo -e "\nSetup neo4j in ENROOT container...\n"
+    echo -e "\n* Setup neo4j in ENROOT container...\n"
     # NOTE: The following lines define the location of ENROOT containers.
     # If there are other containers already available on the system they become invisible to ENROOT after running this script and restarting the shell.
     export ENROOT_DATA_PATH=$(ws_find $WORKSPACE_NAME)/containers
@@ -76,7 +76,6 @@ else
     rm neo4j+4.4-community.sqsh
     
     # Setup n10s plugin
-    echo -e "\n* Setup n10s plugin...\n"
     enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
         cd plugins
         wget https://github.com/neo4j-labs/neosemantics/releases/download/4.4.0.3/neosemantics-4.4.0.3.jar
@@ -93,6 +92,7 @@ EOF
 EOF
 
     # Start database and run data loading script
+    echo -e "\n* Load database...\n"
     cp $CURRENT_DIR/load_data.cypher $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j
     enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
         bin/neo4j start
