@@ -100,5 +100,7 @@ EOF
         cat load_data.cypher | bin/cypher-shell -u neo4j -p $PASSWORD
 EOF
 
+    echo -e "\n* Done!\n"
+
 
 fi
