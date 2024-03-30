@@ -12,15 +12,8 @@ CALL n10s.graphconfig.init({
 });
 
 CALL n10s.rdf.import.fetch(
-    "file:///var/lib/neo4j/raw_data/wikilinks_lang=en.ttl",
-    "Turtle",
-    {verifyUriSyntax: false}
-);
-
-
-CALL n10s.rdf.import.fetch(
-    "file:///var/lib/neo4j/raw_data/mappingbased-objects_lang=en.ttl",
-    "Turtle",
+    "file:///var/lib/neo4j/raw_data/ontology--DEV_type=parsed.nt",
+    "N-Triples",
     {verifyUriSyntax: false}
 );
 
@@ -31,7 +24,13 @@ CALL n10s.rdf.import.fetch(
 );
 
 CALL n10s.rdf.import.fetch(
-    "file:///var/lib/neo4j/raw_data/ontology--DEV_type=parsed.nt",
-    "N-Triples",
+    "file:///var/lib/neo4j/raw_data/mappingbased-objects_lang=en.ttl",
+    "Turtle",
+    {verifyUriSyntax: false}
+);
+
+CALL n10s.rdf.import.fetch(
+    "file:///var/lib/neo4j/raw_data/wikilinks_lang=en.ttl",
+    "Turtle",
     {verifyUriSyntax: false}
 );
