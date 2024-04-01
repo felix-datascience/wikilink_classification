@@ -36,7 +36,7 @@ Otherwise, remove the workspace and restart the setup script.\n"
 else
 
     # Setup workspace
-    echo -e "\n[$(date+%T)] * Setup workspace...\n"
+    echo -e "\n[$(date +%T)] * Setup workspace...\n"
     ws_allocate $WORKSPACE_NAME 60
 
     # Get RDF files
@@ -46,26 +46,26 @@ else
     mkdir raw_data
     cd raw_data
     # wikilinks (en, 2022-12-01)
-    echo -e "\n[$(date+%T)] * Download wikilinks dataset...\n"
+    echo -e "\n[$(date +%T)] * Download wikilinks dataset...\n"
     curl -L -O https://databus.dbpedia.org/dbpedia/generic/wikilinks/2022.12.01/wikilinks_lang=en.ttl.bz2
-    echo -e "\n[$(date+%T)] * Extract wikilinks dataset...\n"
+    echo -e "\n[$(date +%T)] * Extract wikilinks dataset...\n"
     bzip2 -d wikilinks_lang=en.ttl.bz2
     # cleaned object properties (en, 2022-12-01)
-    echo -e "\n[$(date+%T)] * Download object properties dataset...\n"
+    echo -e "\n[$(date +%T)] * Download object properties dataset...\n"
     curl -L -O https://databus.dbpedia.org/dbpedia/mappings/mappingbased-objects/2022.12.01/mappingbased-objects_lang=en.ttl.bz2
-    echo -e "\n[$(date+%T)] * Extract object properties dataset...\n"
+    echo -e "\n[$(date +%T)] * Extract object properties dataset...\n"
     bzip2 -d mappingbased-objects_lang=en.ttl.bz2
     # types, transitive inference (en, 2022-12-01)
-    echo -e "\n[$(date+%T)] * Download instance types dataset...\n"
+    echo -e "\n[$(date +%T)] * Download instance types dataset...\n"
     curl -L -O https://databus.dbpedia.org/dbpedia/mappings/instance-types/2022.12.01/instance-types_inference=transitive_lang=en.ttl.bz2
-    echo -e "\n[$(date+%T)] * Extract instance types dataset...\n"
+    echo -e "\n[$(date +%T)] * Extract instance types dataset...\n"
     bzip2 -d instance-types_inference=transitive_lang=en.ttl.bz2
     # ontology
-    echo -e "\n[$(date+%T)] * Download ontology dataset...\n"
+    echo -e "\n[$(date +%T)] * Download ontology dataset...\n"
     curl -L -O https://databus.dbpedia.org/ontologies/dbpedia.org/ontology--DEV/2022.12.09-011003/ontology--DEV_type=parsed.nt
 
     # Setup neo4j in ENROOT container
-    echo -e "\n[$(date+%T)] * Setup neo4j in ENROOT container...\n"
+    echo -e "\n[$(date +%T)] * Setup neo4j in ENROOT container...\n"
     # NOTE: The following lines define the location of ENROOT containers.
     # If there are other containers already available on the system they become invisible to ENROOT after running this script and restarting the shell.
     export ENROOT_DATA_PATH=$(ws_find $WORKSPACE_NAME)/containers
@@ -91,7 +91,7 @@ EOF
 EOF
 
     # Start database and run data loading script
-    echo -e "\n[$(date+%T)] * Load database...\n"
+    echo -e "\n[$(date +%T)] * Load database...\n"
     cp $CURRENT_DIR/load_data.cypher $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j
     enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
         bin/neo4j start
@@ -99,6 +99,6 @@ EOF
         cat load_data.cypher | bin/cypher-shell -u neo4j -p $PASSWORD
 EOF
 
-    echo -e "\n[$(date+%T)] * Done!\n"
+    echo -e "\n[$(date +%T)] * Done!\n"
 
 fi
