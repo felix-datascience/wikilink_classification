@@ -88,6 +88,15 @@ else
         exit
 EOF
 
+    # Setup graph data science plugin
+    enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
+        cd plugins
+        wget https://github.com/neo4j/graph-data-science/releases/download/2.6.2/neo4j-graph-data-science-2.6.2.jar
+        echo -e "dbms.security.procedures.unrestricted=gds.*" >> ../conf/neo4j.conf
+        echo -e "dbms.security.procedures.allowlist=gds.*" >> ../conf/neo4j.conf
+        exit
+EOF
+
     # Copy data into ENROOT container
     cp -r $(ws_find $WORKSPACE_NAME)/data/raw_data $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j
 
