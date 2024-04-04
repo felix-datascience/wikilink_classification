@@ -39,7 +39,7 @@ else
     # From here on, redirect output to log file
     exec >$LOG_FILE_PATH 2>&1
 
-    echo -e "$[(date +%T)] * Start neo4j setup...\n"
+    echo -e "[$(date +%T)] * Start neo4j setup...\n"
 
     # Setup workspace
     echo -e "\n[$(date +%T)] * Setup workspace...\n"
