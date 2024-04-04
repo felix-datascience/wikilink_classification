@@ -4,6 +4,7 @@
 # It sets up a workspace and a neo4j container with the initial raw data.
 
 CURRENT_DIR=$(pwd)
+LOG_FILE_PATH=$CURRENT_DIR/neo4j_setup_log.txt
 
 # Read flags
 while getopts p:c:w flag                                                           
@@ -34,6 +35,11 @@ Maybe the setup was already done before?
 Otherwise, remove the workspace and restart the setup script.\n"
 
 else
+
+    # From here on, redirect output to log file
+    exec >$LOG_FILE_PATH 2>&1
+
+    echo -e "$[(date +%T)] * Start neo4j setup...\n"
 
     # Setup workspace
     echo -e "\n[$(date +%T)] * Setup workspace...\n"
