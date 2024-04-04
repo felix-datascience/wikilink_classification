@@ -80,20 +80,14 @@ else
     enroot create -n $NEO4J_CONTAINER_NAME neo4j+4.4.12-community.sqsh
     rm neo4j+4.4-community.sqsh
     
-    # Setup n10s plugin
+    # Setup n10s and graph data science plugins
     enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
         cd plugins
         wget https://github.com/neo4j-labs/neosemantics/releases/download/4.4.0.3/neosemantics-4.4.0.3.jar
-        echo -e "\ndbms.unmanaged_extension_classes=n10s.endpoint=/rdf" >> ../conf/neo4j.conf
-        exit
-EOF
-
-    # Setup graph data science plugin
-    enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
-        cd plugins
         wget https://github.com/neo4j/graph-data-science/releases/download/2.6.2/neo4j-graph-data-science-2.6.2.jar
-        echo -e "dbms.security.procedures.unrestricted=gds.*" >> ../conf/neo4j.conf
-        echo -e "dbms.security.procedures.allowlist=gds.*" >> ../conf/neo4j.conf
+        echo -e "\ndbms.unmanaged_extension_classes=n10s.endpoint=/rdf" >> ../conf/neo4j.conf
+        echo -e "dbms.security.procedures.unrestricted=gds.*, n10s*" >> ../conf/neo4j.conf
+        echo -e "dbms.security.procedures.allowlist=gds.*, n10s.*" >> ../conf/neo4j.conf
         exit
 EOF
 
@@ -112,6 +106,7 @@ EOF
         bin/neo4j start
         sleep 180
         cat load_data.cypher | bin/cypher-shell -u neo4j -p $PASSWORD
+        bin/neo4j stop
 EOF
 
     echo -e "\n[$(date +%T)] * Done!\n"
