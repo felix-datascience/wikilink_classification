@@ -110,7 +110,7 @@ EOF
     cp $CURRENT_DIR/load_data.cypher $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j
     enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
         bin/neo4j start
-        sleep 20
+        sleep 180
         cat load_data.cypher | bin/cypher-shell -u neo4j -p $PASSWORD
 EOF
 
