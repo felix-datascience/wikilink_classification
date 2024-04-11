@@ -41,7 +41,7 @@ CALL n10s.rdf.import.fetch(
     {verifyUriSyntax: false}
 );
 
-RETURN "Load instance types dataset..." AS `STATUS: `;
+RETURN "Load wikilinks dataset..." AS `STATUS: `;
 
 CALL n10s.rdf.import.fetch(
     "file:///var/lib/neo4j/raw_data/wikilinks_lang=en.ttl",
