@@ -25,7 +25,13 @@ CALL n10s.rdf.import.fetch(
     {verifyUriSyntax: false}
 );
 
-RETURN "Load instance types dataset..." AS `STATUS: `;
+RETURN "Load instance types datasets..." AS `STATUS: `;
+
+CALL n10s.rdf.import.fetch(
+    "file:///var/lib/neo4j/raw_data/instance-types_inference=specific_lang=en.ttl",
+    "Turtle",
+    {verifyUriSyntax: false}
+);
 
 CALL n10s.rdf.import.fetch(
     "file:///var/lib/neo4j/raw_data/instance-types_inference=transitive_lang=en.ttl",

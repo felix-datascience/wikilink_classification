@@ -61,10 +61,15 @@ else
     curl -L -O https://databus.dbpedia.org/dbpedia/mappings/mappingbased-objects/2022.12.01/mappingbased-objects_lang=en.ttl.bz2
     echo -e "\n[$(date +%T)] * Extract object properties dataset...\n"
     bzip2 -d mappingbased-objects_lang=en.ttl.bz2
+    # types, specific inference (en, 2022-12-01)
+    echo -e "\n[$(date +%T)] * Download instance types dataset (specific)...\n"
+    curl -L -O https://databus.dbpedia.org/dbpedia/mappings/instance-types/2022.12.01/instance-types_inference=specific_lang=en.ttl.bz2
+    echo -e "\n[$(date +%T)] * Extract instance types dataset (specific)...\n"
+    bzip2 -d instance-types_inference=specific_lang=en.ttl.bz2
     # types, transitive inference (en, 2022-12-01)
-    echo -e "\n[$(date +%T)] * Download instance types dataset...\n"
+    echo -e "\n[$(date +%T)] * Download instance types dataset (transitive)...\n"
     curl -L -O https://databus.dbpedia.org/dbpedia/mappings/instance-types/2022.12.01/instance-types_inference=transitive_lang=en.ttl.bz2
-    echo -e "\n[$(date +%T)] * Extract instance types dataset...\n"
+    echo -e "\n[$(date +%T)] * Extract instance types dataset (transitive)...\n"
     bzip2 -d instance-types_inference=transitive_lang=en.ttl.bz2
     # ontology
     echo -e "\n[$(date +%T)] * Download ontology dataset...\n"
