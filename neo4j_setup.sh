@@ -6,7 +6,7 @@
 CURRENT_DIR=$(pwd)
 LOG_FILE_PATH=$CURRENT_DIR/neo4j_setup_log.txt
 
-# Read flags
+# read flags
 while getopts p:c:w flag                                                           
 do                                                                              
     case "${flag}" in                                                           
@@ -26,26 +26,26 @@ if [[ $WORKSPACE_NAME == "" ]]; then
     WORKSPACE_NAME="wikilinks_ws"
 fi
 
-# Test if workspace already exists
+# test if workspace already exists
 if [[ $(ws_list) =~ $WORKSPACE_NAME ]]; then
 
-    # Workspace already exists, print error message and quit
+    # workspace already exists, print error message and quit
     echo -e "\nERROR: ${WORKSPACE_NAME} workspace already exists.\n
 Maybe the setup was already done before?
 Otherwise, remove the workspace and restart the setup script.\n"
 
 else
 
-    # From here on, redirect output to log file
+    # from here on, redirect output to log file
     exec >$LOG_FILE_PATH 2>&1
 
     echo -e "[$(date +%T)] * Start neo4j setup...\n"
 
-    # Setup workspace
+    # setup workspace
     echo -e "\n[$(date +%T)] * Setup workspace...\n"
     ws_allocate $WORKSPACE_NAME 60
 
-    # Get RDF files
+    # get RDF files
     cd $(ws_find $WORKSPACE_NAME)
     mkdir data
     cd data
@@ -75,7 +75,7 @@ else
     echo -e "\n[$(date +%T)] * Download ontology dataset...\n"
     curl -L -O https://databus.dbpedia.org/ontologies/dbpedia.org/ontology--DEV/2022.12.09-011003/ontology--DEV_type=parsed.nt
 
-    # Setup neo4j in ENROOT container
+    # setup neo4j in ENROOT container
     echo -e "\n[$(date +%T)] * Setup neo4j in ENROOT container...\n"
     # NOTE: The following lines define the location of ENROOT containers.
     # If there are other containers already available on the system they become invisible to ENROOT after running this script and restarting the shell.
@@ -85,7 +85,7 @@ else
     enroot create -n $NEO4J_CONTAINER_NAME neo4j+4.4.12-community.sqsh
     rm neo4j+4.4-community.sqsh
     
-    # Setup n10s and graph data science plugins
+    # setup n10s and graph data science plugins
     enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
         cd plugins
         wget https://github.com/neo4j-labs/neosemantics/releases/download/4.4.0.3/neosemantics-4.4.0.3.jar
@@ -96,15 +96,15 @@ else
         exit
 EOF
 
-    # Copy data into ENROOT container
+    # copy data into ENROOT container
     cp -r $(ws_find $WORKSPACE_NAME)/data/raw_data $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j
 
-    # Change initial password
+    # change initial password
     enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
         bin/neo4j-admin set-initial-password $PASSWORD
 EOF
 
-    # Start database and run data loading script
+    # start database and run data loading script
     echo -e "\n[$(date +%T)] * Load database...\n"
     cp $CURRENT_DIR/load_data.cypher $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j
     enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
