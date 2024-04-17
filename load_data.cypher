@@ -15,6 +15,7 @@ CALL n10s.graphconfig.init({
 	applyNeo4jNaming: false
 });
 
+
 // load data
 
 RETURN "Load ontology dataset..." AS `STATUS: `;
@@ -24,6 +25,11 @@ CALL n10s.rdf.import.fetch(
     "N-Triples",
     {verifyUriSyntax: false}
 );
+
+// remove Resource labels and replace them with Ontology label
+MATCH (n:Resource)
+REMOVE n:Resource
+SET n:Ontology;
 
 RETURN "Load instance types datasets..." AS `STATUS: `;
 
