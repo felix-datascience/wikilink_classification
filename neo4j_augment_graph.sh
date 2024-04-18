@@ -33,11 +33,11 @@ exec >$LOG_FILE_PATH 2>&1
 echo -e "[$(date +%T)] * Start neo4j graph augmentation...\n"
 
 # start database and run types and degree centrality augmentation script
-cp $CURRENT_DIR/augment_graph_types_and_degree.cypher $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j
+cp $CURRENT_DIR/augment_graph_types_and_degree_centrality.cypher $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j
 enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
     bin/neo4j start
     sleep 180
-    cat augment_graph_types_and_degree.cypher | bin/cypher-shell -u neo4j -p $PASSWORD > query_output.txt
+    cat augment_graph_types_and_degree_centrality.cypher | bin/cypher-shell -u neo4j -p $PASSWORD > query_output.txt
 EOF
 echo -e "\n[$(date +%T)] * Types and degree augmentation script output:\n"
 cat $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j/query_output.txt >> $LOG_FILE_PATH
