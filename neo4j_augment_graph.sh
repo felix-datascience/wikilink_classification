@@ -38,14 +38,18 @@ enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
     bin/neo4j start
     sleep 180
     cat augment_graph_types_and_degree_centrality.cypher | bin/cypher-shell -u neo4j -p $PASSWORD > query_output.txt
+    bin/neo4j stop
 EOF
 echo -e "\n[$(date +%T)] * Types and degree augmentation script output:\n"
 cat $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j/query_output.txt >> $LOG_FILE_PATH
 rm $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j/query_output.txt
+sleep 180
 
 # run mutual wikilinks augmentation script
 cp $CURRENT_DIR/augment_graph_mutual_wikilinks.cypher $(ws_find $WORKSPACE_NAME)/containers/$NEO4J_CONTAINER_NAME/var/lib/neo4j
 enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
+    bin/neo4j start
+    sleep 180
     cat augment_graph_mutual_wikilinks.cypher | bin/cypher-shell -u neo4j -p $PASSWORD > query_output.txt
     bin/neo4j stop
 EOF
