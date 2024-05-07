@@ -85,14 +85,17 @@ else
     enroot create -n $NEO4J_CONTAINER_NAME neo4j+4.4.12-community.sqsh
     rm neo4j+4.4-community.sqsh
     
-    # setup n10s and graph data science plugins
+    # setup n10s, graph data science and apoc plugins
     enroot start --rw $NEO4J_CONTAINER_NAME bash << EOF
         cd plugins
         wget https://github.com/neo4j-labs/neosemantics/releases/download/4.4.0.3/neosemantics-4.4.0.3.jar
         wget https://github.com/neo4j/graph-data-science/releases/download/2.6.2/neo4j-graph-data-science-2.6.2.jar
+        wget apoc-4.4.0.0-core.jar
         echo -e "\ndbms.unmanaged_extension_classes=n10s.endpoint=/rdf" >> ../conf/neo4j.conf
         echo -e "dbms.security.procedures.unrestricted=gds.*, n10s*" >> ../conf/neo4j.conf
-        echo -e "dbms.security.procedures.allowlist=gds.*, n10s.*" >> ../conf/neo4j.conf
+        echo -e "dbms.security.procedures.allowlist=gds.*, n10s.*, apoc.cypher.run, apoc.export.csv.query" >> ../conf/neo4j.conf
+        echo -e "apoc.export.file.enabled=true" >> ../conf/neo4.conf
+        echo -e "dbms.directories.import=/var/lib/neo4j" >> ../conf/neo4j.conf
         exit
 EOF
 
