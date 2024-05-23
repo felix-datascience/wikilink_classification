@@ -218,32 +218,60 @@ def filter_entities(
     entities = pd.Series(entities, name="entity")
 
     # read dataset that is filtered and remove entities that don't appear in the entities dataset
-    n_triples_before = 0
-    n_triples_after = 0
-    for i, chunk in enumerate(pd.read_csv(dataset_filepath, chunksize=chunksize, **dataset_file_parsing_args)):
-        print(f"processing chunk {i+1}...")
-        if entities_dataset_filetype == "ttl":
-            chunk = chunk.drop(columns=".")
-            # remove "<" and ">"
+    try:
+        n_triples_before = 0
+        n_triples_after = 0
+        for i, chunk in enumerate(pd.read_csv(dataset_filepath, chunksize=chunksize, **dataset_file_parsing_args)):
+            print(f"processing chunk {i+1}...")
+            if dataset_filetype == "ttl":
+                chunk = chunk.drop(columns=".")
+                # remove "<" and ">"
+                for col in chunk.columns:
+                    chunk[col] = chunk[col].str[1:-1]
+            n_triples_before = n_triples_before + len(chunk)
+
+            # filter entities
+            chunk = chunk.merge(entities, left_on="subject", right_on="entity")
+            chunk = chunk.drop(columns="entity")
+            if not filter_subject_only:
+                chunk = chunk.merge(entities, left_on="object", right_on="entity")
+                chunk = chunk.drop(columns="entity")
+            n_triples_after = n_triples_after + len(chunk)
+
+            # write back to file
+            chunk.to_csv(
+                processed_dataset_filepath,
+                index=False,
+                header=True if i == 0 else False,
+                mode="w" if i == 0 else "a"
+            )
+    except pd.errors.ParserError:
+        dataset_file_parsing_args = {"sep": ", "}
+        n_triples_before = 0
+        n_triples_after = 0
+        for i, chunk in enumerate(pd.read_csv(dataset_filepath, chunksize=chunksize, **dataset_file_parsing_args)):
+            print(f"processing chunk {i+1}...")
+            # remove " characters
             for col in chunk.columns:
                 chunk[col] = chunk[col].str[1:-1]
-        n_triples_before = n_triples_before + len(chunk)
+            n_triples_before = n_triples_before + len(chunk)
 
-        # filter entities
-        chunk = chunk.merge(entities, left_on="subject", right_on="entity")
-        chunk = chunk.drop(columns="entity")
-        if not filter_subject_only:
-            chunk = chunk.merge(entities, left_on="object", right_on="entity")
+            # filter entities
+            chunk = chunk.merge(entities, left_on="subject", right_on="entity")
             chunk = chunk.drop(columns="entity")
-        n_triples_after = n_triples_after + len(chunk)
+            if not filter_subject_only:
+                chunk = chunk.merge(entities, left_on="object", right_on="entity")
+                chunk = chunk.drop(columns="entity")
+            n_triples_after = n_triples_after + len(chunk)
 
-        # write back to file
-        chunk.to_csv(
-            processed_dataset_filepath,
-            index=False,
-            header=True if i == 0 else False,
-            mode="w" if i == 0 else "a"
-        )
+            # write back to file
+            chunk.to_csv(
+                processed_dataset_filepath,
+                index=False,
+                header=True if i == 0 else False,
+                mode="w" if i == 0 else "a"
+            )
+
 
     # print statistics (triples before and after filtering)
     print("\nnumber of triples\nbefore filtering\tafter filtering")
