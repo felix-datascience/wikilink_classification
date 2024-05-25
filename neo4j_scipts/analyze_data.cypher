@@ -428,7 +428,7 @@ RETURN
 // number of entity pairs with mutual wikilinks
 // count is divided by two because each pair has two mutual_wikilinks edges
 
-RETURN "Number of entit// count is divided by two because each pair has two mutual_wikilinks edgesy pairs with mutual wikilinks" AS `STATUS`;
+RETURN "Count of mutually wikilinked entity pairs" AS `STATUS`;
 
 MATCH (a)-[r:mutual_wikilinks]->(b)
 RETURN count(r) / 2 AS `number of entity pairs with mututal wikilinks`;
@@ -437,7 +437,7 @@ RETURN count(r) / 2 AS `number of entity pairs with mututal wikilinks`;
 // number of entity pairs with mutual wikilinks and at least one other connecting property (in either direction)
 // count is divided by two because each pair has two mutual_wikilinks edges
 
-RETURN "Number of entity pairs with mutual wikilinks and at least one connecting property" AS `STATUS`;
+RETURN "Count of mutually wikilinked entity pairs with at least one connecting property" AS `STATUS`;
 
 MATCH (a)-[r:mutual_wikilinks]->(b)
 WHERE r.n_connecting_properties_in > 0 OR r.n_connecting_properties_out > 0
