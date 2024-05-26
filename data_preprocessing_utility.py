@@ -346,7 +346,7 @@ def split_dataset(
 
 def concat_files(filepaths, filetypes, processed_dataset_filepath, chunksize=2000000):
     """
-    This function is used to concatenate multiple files containing triples into one file.
+    This function is used to concatenate multiple files containing triples into one TSV file that can be used with pykeen.
     The function can handle datasets that don't fit into memory.
 
     :param filepaths: list of file paths (strings)
@@ -384,7 +384,8 @@ def concat_files(filepaths, filetypes, processed_dataset_filepath, chunksize=200
                     chunk[col] = chunk[col].str[1:-1]
             chunk.to_csv(
                 processed_dataset_filepath,
+                sep="\t",
                 index=False,
-                header=True if i == 0 and j == 0 else False,
+                header=False,
                 mode="w" if i == 0 and j == 0 else "a"
             )
