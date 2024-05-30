@@ -1,5 +1,6 @@
 data/raw_data/
 data/exported_data
 data/processed_data
+pykeen/results
 wikilink_classification.code-workspace
 .conda
