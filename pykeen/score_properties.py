@@ -23,7 +23,7 @@ TEST_PROPERTY_SCORES_FILEPATH = f"{SCORES_DIR}test_scores.csv"
 
 # create directory for storing property scores (if it doesn't exist yet)
 if not os.path.isdir(SCORES_DIR):
-    os.mkdir(SCORES_DIR)
+    os.makedirs(SCORES_DIR)
 
 # load validation matrix file or create it if it doesn't exist yet
 if os.path.isfile(VAL_MATRIX_FILEPATH):
@@ -44,7 +44,7 @@ entity_pairs_val = true_properties_val[["subject", "object"]].to_numpy()
 entity_pairs_test = true_properties_test[["subject", "object"]].to_numpy()
 
 # load training triples factory and model
-checkpoint = torch.load(PYKEEN_CHECKPOINTS.joinpath(CHECKPOINT_NAME), map_location=torch.device('cpu'))
+checkpoint = torch.load(PYKEEN_CHECKPOINTS.joinpath(CHECKPOINT_NAME))
 training = TriplesFactory.from_path(
     path=TRAIN_PATH,
     entity_to_id=checkpoint['entity_to_id_dict'],
