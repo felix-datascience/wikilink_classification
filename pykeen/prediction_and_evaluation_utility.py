@@ -39,6 +39,7 @@ def score_properties(entity_pairs, model, triples_factory, relation_to_id_dict):
     cols.sort()
     cols = np.insert(cols, 0, "subject")
     cols = np.insert(cols, 1, "object")
+    scores = scores.reindex(cols, axis=1)
 
     return scores
 
@@ -65,6 +66,7 @@ def true_properties_matrix(filepath):
     cols.sort()
     cols = np.insert(cols, 0, "subject")
     cols = np.insert(cols, 1, "object")
+    true_props = true_props.reindex(cols, axis=1)
     # sort rows
     true_props = true_props.sort_values(["subject", "object"])
 
