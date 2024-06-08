@@ -16,5 +16,5 @@ scores = pd.read_csv(VAL_PROPERTY_SCORES_FILEPATH)
 labels = pd.read_csv(VAL_MATRIX_FILEPATH)
 
 # calculate thresholds and save file
-thresholds = find_thresholds(scores, labels)
+thresholds = find_thresholds(scores, labels, use_optuna=True, n_trials=300)
 thresholds.to_csv(THRESHOLDS_FILEPATH, index=False)

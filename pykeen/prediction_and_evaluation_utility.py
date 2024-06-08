@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from pykeen.predict import predict_target
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import optuna
 
 
 def score_properties(entity_pairs, model, triples_factory, relation_to_id_dict):
@@ -107,7 +108,37 @@ def max_acc_threshold(scores, labels):
     return threshold
 
 
-def find_thresholds(scores_df, labels_df):
+def max_acc_threshold_optuna(scores, labels, n_trials=100):
+    """
+    Function for optimizing the threshold with optuna. This function can have a significantly lower runtime.
+    Instead of trying out any possible threshold, like in the max_acc_threshold function, optuna is used to
+    calculate the accuracy for a subset of thresholds.
+
+    :param scores: list or array containing the scores for multiple triples, all with the same property type
+    :type scores: list
+    :param labels: list or array containing ground truth binary labels
+    :type labels: list
+    :param n_trials: number of trials in the optuna study (number of sampled thresholds)
+    :type n_trials: int
+    :return: the optimal threshold for this data (float)
+    """
+    scores_labels = pd.DataFrame({"score": scores, "label": labels})
+    scores_labels = scores_labels.sort_values("score").reset_index(drop=True)
+    min_threshold, max_threshold = scores_labels["score"].agg(["min", "max"])
+    
+    def objective(trial):
+        threshold = trial.suggest_float('threshold', min_threshold, max_threshold)
+        predictions = (scores_labels["score"] >= threshold).astype(int)
+        accuracy = accuracy_score(scores_labels["label"], predictions)
+        return accuracy
+    
+    study = optuna.create_study(direction="maximize")
+    study.optimize(objective, n_trials=n_trials)
+    
+    return study.best_params["threshold"]
+
+
+def find_thresholds(scores_df, labels_df, use_optuna=False, n_trials=None):
     """
     This function iterates over all property types that are contained in the ground truth dataset and
     finds the optimal threshold for all property types. This function makes use of the max_acc_threshold
@@ -117,13 +148,20 @@ def find_thresholds(scores_df, labels_df):
     :type scores_df: pd.DataFrame
     :param labels_df: dataframe containing ground truth labels for multiple entity pairs (rows) and property types (columns)
     :type labels_df: pd.DataFrame
+    :param use_optuna: if set to True, use optuna for optimizing with sampled thresholds, if set to False all thresholds are tested to find the best
+    :type use_optuna: bool
+    :param n_trials: number of trials in the optuna study (number of sampled thresholds)
+    :type n_trials: int
     :return: dataframe containing the optimized thresholds for all property types that are available in the ground truth dataset
     """
     thresholds = {}
     # iterate over all properties contained in labels_df and get thresholds for each property
     for col in np.setdiff1d(labels_df.columns, ["subject", "object"]):
         scores, labels = scores_df[col], labels_df[col]
-        thresholds[col] = max_acc_threshold(scores, labels)
+        if find_thresholds == True:
+            thresholds[col] = max_acc_threshold_optuna(scores, labels, n_trials=n_trials)
+        else:
+            thresholds[col] = max_acc_threshold(scores, labels)
     thresholds_df = pd.DataFrame.from_dict(thresholds, orient="index")
     thresholds_df = thresholds_df.reset_index()
     thresholds_df = thresholds_df.rename(columns={"index": "property", 0: "threshold"})
@@ -187,3 +225,37 @@ def evaluate_triple_classification(ground_truth_df, predictions_df):
     ), axis=1)
     
     return evaluation
+
+
+def domain_range_filter_entity_types(ontology_df, filtered_property_types_df):
+    """
+    ...
+    """
+    domain_range = ontology_df[
+        (ontology_df["predicate"] == "http://www.w3.org/2000/01/rdf-schema#domain")
+        | (ontology_df["predicate"] == "http://www.w3.org/2000/01/rdf-schema#range")
+    ]
+    # filter property types
+    # (only keep range and domain restrictions for the subset of filtered property types)
+    domain_range = domain_range.merge(filtered_property_types_df, left_on="subject", right_on="filtered_property_types")
+    domain_range = domain_range.drop(columns="filtered_property_types")
+    # ...
+    domain_filter = domain_range[domain_range["predicate"] == "http://www.w3.org/2000/01/rdf-schema#domain"]
+    domain_filter = domain_filter.drop(columns="predicate")
+    domain_filter["dummy"] = 1
+    domain_filter = domain_filter.rename(columns={"subject": "property_type", "object": "entity_type"})
+    domain_filter = domain_filter.pivot(index="entity_type", columns="property_type", values="dummy")
+    domain_filter = domain_filter.fillna(0)
+    domain_filter = domain_filter.astype(int)
+    domain_filter = domain_filter.reset_index()
+    # ...
+    range_filter = domain_range[domain_range["predicate"] == "http://www.w3.org/2000/01/rdf-schema#range"]
+    range_filter = range_filter.drop(columns="predicate")
+    range_filter["dummy"] = 1
+    range_filter = range_filter.rename(columns={"subject": "property_type", "object": "entity_type"})
+    range_filter = range_filter.pivot(index="entity_type", columns="property_type", values="dummy")
+    range_filter = range_filter.fillna(0)
+    range_filter = range_filter.astype(int)
+    range_filter = range_filter.reset_index()
+
+    return domain_filter, range_filter
