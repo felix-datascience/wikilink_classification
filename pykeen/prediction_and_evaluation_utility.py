@@ -133,7 +133,7 @@ def max_acc_threshold_optuna(scores, labels, n_trials=100):
         return accuracy
     
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials=n_trials)
+    study.optimize(objective, n_trials=n_trials, n_jobs=-1)
     
     return study.best_params["threshold"]
 
