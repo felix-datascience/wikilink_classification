@@ -158,7 +158,7 @@ def find_thresholds(scores_df, labels_df, use_optuna=False, n_trials=None):
     # iterate over all properties contained in labels_df and get thresholds for each property
     for col in np.setdiff1d(labels_df.columns, ["subject", "object"]):
         scores, labels = scores_df[col], labels_df[col]
-        if find_thresholds == True:
+        if use_optuna == True:
             thresholds[col] = max_acc_threshold_optuna(scores, labels, n_trials=n_trials)
         else:
             thresholds[col] = max_acc_threshold(scores, labels)
