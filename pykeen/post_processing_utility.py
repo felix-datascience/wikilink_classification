@@ -69,6 +69,75 @@ def read_entity_types(triples_df, types_filepath):
     return entity_types
 
 
+def get_expanded_subclass_relationships(ontology_df):
+    """
+    This function recursively expands the subclass relationships in the ontology.
+    E.g. the ontology contains the triples:
+    - Academic, subClassOf, Person
+    - Person, subClassOf, Animal
+    The function would add the triple:
+    - Academic, subClassOf, Animal
+    This procedure is repeated until no new subclass relationships can be added.
+
+    :param ontology_df: dataframe containing ontology triples
+    :type ontology_df: pd.DataFrame
+    :return: dataframe containing pairs of subclass-superclass pairs
+    """
+    subclasses = ontology_df[ontology_df["predicate"] == "http://www.w3.org/2000/01/rdf-schema#subClassOf"]
+    expanded_subclasses = subclasses.copy()
+    expanded_subclasses = expanded_subclasses.drop(columns="predicate")
+    expanded_subclasses = expanded_subclasses.rename(columns={"subject": "superclass0", "object": "superclass1"})
+    
+    # create chains of subclass relationships
+    expanded_classes = True
+    superclass_idx = 1
+    while expanded_classes == True:
+        expanded_subclasses = expanded_subclasses.merge(subclasses, left_on=f"superclass{superclass_idx}", right_on="subject", how="left")
+        expanded_subclasses = expanded_subclasses.drop(columns=["predicate", "subject"])
+        superclass_idx += 1
+        expanded_subclasses = expanded_subclasses.rename(columns={"object": f"superclass{superclass_idx}"})
+        if (~expanded_subclasses[f"superclass{superclass_idx}"].isna()).sum() > 0:
+            expanded_classes = True
+        else:
+            expanded_classes = False
+        
+    # create every possible pair of subclass-class relations
+    expanded_subclass_pairs = pd.DataFrame()
+    for i in range(superclass_idx):
+        for j in range(i+1, superclass_idx+1):
+            subclass_col = f"superclass{i}"
+            superclass_col = f"superclass{j}"
+            pairs = expanded_subclasses[[subclass_col, superclass_col]]
+            pairs = pairs.rename(columns={subclass_col: "subclass", superclass_col: "superclass"})
+            pairs = pairs.dropna()
+            expanded_subclass_pairs = pd.concat([expanded_subclass_pairs, pairs], axis=0)
+            expanded_subclass_pairs = expanded_subclass_pairs.drop_duplicates()
+            expanded_subclass_pairs = expanded_subclass_pairs.reset_index(drop=True)
+
+    return expanded_subclass_pairs
+
+
+def expand_entity_types(entity_types_df, ontology_df):
+    """
+    This function expands the provided entity - entity type pairs with their superclasses.
+
+    :param entity_types_df: dataframe containing pairs of entity and entity type
+    :type entity_types_df: pd.DataFrame
+    :param ontology_df: dataframe containing ontology triples
+    :type ontology_df: pd.DataFrame
+    :return: dataframe containing pairs of entity and entity type extended with superclasses
+    """
+    expanded_subclasses = get_expanded_subclass_relationships(ontology_df)
+    expanded_entity_types = entity_types_df.merge(expanded_subclasses, left_on="entity_type", right_on="subclass")
+    expanded_entity_types = expanded_entity_types.drop(columns=["entity_type", "subclass"])
+    expanded_entity_types = expanded_entity_types.rename(columns={"superclass": "entity_type"})
+    expanded_entity_types = pd.concat([entity_types_df, expanded_entity_types])
+    expanded_entity_types = expanded_entity_types.drop_duplicates()
+    expanded_entity_types = expanded_entity_types.reset_index()
+
+    return expanded_entity_types
+
+
 def domain_range_filter_triples(
         triples_df,
         types_filepath,
@@ -102,6 +171,8 @@ def domain_range_filter_triples(
     
     # read entity types
     entity_types = read_entity_types(triples_df, types_filepath)
+    # expand entity types with superclasses
+    entity_types = expand_entity_types(entity_types, ontology_df)
     # extract domain and range restrictions from ontology
     domain_filter, range_filter = extract_domain_range_filter(ontology_df, filtered_property_types_df)
     
