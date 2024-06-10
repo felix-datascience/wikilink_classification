@@ -33,13 +33,14 @@ testing = TriplesFactory.from_path(
 hpo_pipeline_results = hpo_pipeline(
     n_trials=20,
     training=training,
+    validation=validation,
     testing=testing,
     model="TransE",
     training_loop="sLCWA",
     # use adagrad optimizer
     optimizer="Adagrad",
     training_kwargs=dict(
-        num_epochs=1000,
+        num_epochs=100,
         checkpoint_name=CHECKPOINT_NAME,
     ),
     model_kwargs_ranges=dict(
@@ -58,7 +59,7 @@ hpo_pipeline_results = hpo_pipeline(
         margin=dict(type=float, low=1.0, high=2.0),
     ),
     # use learning rate scheduler
-    lr_scheduler='ExponentialLR',
+    lr_scheduler="ExponentialLR",
     result_tracker="csv",
     result_tracker_kwargs=dict(
         name=RESULTS_TRACKER_PATH,
