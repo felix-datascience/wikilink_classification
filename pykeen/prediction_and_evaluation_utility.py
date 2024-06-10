@@ -225,37 +225,3 @@ def evaluate_triple_classification(ground_truth_df, predictions_df):
     ), axis=1)
     
     return evaluation
-
-
-def domain_range_filter_entity_types(ontology_df, filtered_property_types_df):
-    """
-    ...
-    """
-    domain_range = ontology_df[
-        (ontology_df["predicate"] == "http://www.w3.org/2000/01/rdf-schema#domain")
-        | (ontology_df["predicate"] == "http://www.w3.org/2000/01/rdf-schema#range")
-    ]
-    # filter property types
-    # (only keep range and domain restrictions for the subset of filtered property types)
-    domain_range = domain_range.merge(filtered_property_types_df, left_on="subject", right_on="filtered_property_types")
-    domain_range = domain_range.drop(columns="filtered_property_types")
-    # ...
-    domain_filter = domain_range[domain_range["predicate"] == "http://www.w3.org/2000/01/rdf-schema#domain"]
-    domain_filter = domain_filter.drop(columns="predicate")
-    domain_filter["dummy"] = 1
-    domain_filter = domain_filter.rename(columns={"subject": "property_type", "object": "entity_type"})
-    domain_filter = domain_filter.pivot(index="entity_type", columns="property_type", values="dummy")
-    domain_filter = domain_filter.fillna(0)
-    domain_filter = domain_filter.astype(int)
-    domain_filter = domain_filter.reset_index()
-    # ...
-    range_filter = domain_range[domain_range["predicate"] == "http://www.w3.org/2000/01/rdf-schema#range"]
-    range_filter = range_filter.drop(columns="predicate")
-    range_filter["dummy"] = 1
-    range_filter = range_filter.rename(columns={"subject": "property_type", "object": "entity_type"})
-    range_filter = range_filter.pivot(index="entity_type", columns="property_type", values="dummy")
-    range_filter = range_filter.fillna(0)
-    range_filter = range_filter.astype(int)
-    range_filter = range_filter.reset_index()
-
-    return domain_filter, range_filter
