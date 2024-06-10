@@ -1,3 +1,4 @@
+import sys
 import os
 import pandas as pd
 import torch
@@ -7,7 +8,7 @@ from pykeen.models import TransE
 from prediction_and_evaluation_utility import true_properties_matrix, score_properties
 
 # model name
-MODEL_NAME = "transE_model1"
+MODEL_NAME = sys.argv[1]
 
 # file paths
 TRAIN_PATH = "../data/processed_data/train.tsv"

@@ -1,8 +1,9 @@
+import sys
 import pandas as pd
 from prediction_and_evaluation_utility import classify_triples, evaluate_triple_classification
 
 # model name
-MODEL_NAME = "transE_model1"
+MODEL_NAME = sys.argv[1]
 
 # file paths
 VAL_MATRIX_FILEPATH = "../data/processed_data/val_matrix.csv"
