@@ -223,5 +223,7 @@ def evaluate_triple_classification(ground_truth_df, predictions_df):
         pd.Series(recall, name="recall"),
         pd.Series(f1, name="f1")
     ), axis=1)
+    evaluation = evaluation.reset_index()
+    evaluation = evaluation.rename(columns={"index": "property"})
     
     return evaluation
