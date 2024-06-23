@@ -98,6 +98,225 @@ def remove_entity_pairs(
     print(f"{n_triples_before}\t\t{n_triples_after} ({round(n_triples_after / n_triples_before, 3)})")
 
 
+def filter_triples_by_uri(
+        dataset_filepath,
+        processed_dataset_filepath,
+        uri_substring,
+        positive_match=True,
+        dataset_filetype="csv",
+        chunksize=2000000
+    ):
+    """
+    This function is used to filter triples by their URIs. The function can either remove triples that match the
+    provided substring or remove triples that don't match the provided substring.
+
+    :param dataset_filepath: file path of the file where triples are removed
+    :type dataset_filepath: str
+    :param processed_dataset_filepath: file path which is used to store the dataset with removed triples
+    :type processed_dataset_filepath: str
+    :param uri_substring: substring that is used to match URIs
+    :type uri_substring: str
+    :param positive_match: if set to True triples with matching URIs are kept, if set to False they are removed
+    :type positive_match: bool
+    :param dataset_filetype: file type, either "csv" or "ttl"
+    :type dataset_filetype: str
+    :param chunksize: size of the chunks that are read when iterating over the file
+    :type chunksize: int
+    :return: None
+    """
+
+    # define and store file parsing arguments
+    csv_file_parsing_args = {}
+    ttl_file_parsing_args = {"sep": " ", "header": None, "names": ["subject", "predicate", "object", "."]}
+    if dataset_filetype == "csv":
+        dataset_file_parsing_args = csv_file_parsing_args
+    elif dataset_filetype == "ttl":
+        dataset_file_parsing_args = ttl_file_parsing_args
+    else:
+        print('File type can either be "csv" or "ttl"')
+        return
+
+    # read dataset that is filtered and only keep triples where both subject have a matching URI
+    n_triples_before = 0
+    n_triples_after = 0
+    for i, chunk in enumerate(pd.read_csv(dataset_filepath, chunksize=chunksize, **dataset_file_parsing_args)):
+        print(f"filter dataset (chunk {i+1})...")
+        if dataset_filetype == "ttl":
+            chunk = chunk.drop(columns=".")
+            # remove "<" and ">"
+            for col in chunk.columns:
+                chunk[col] = chunk[col].str[1:-1]
+        n_triples_before = n_triples_before + len(chunk)
+        # subjects matching the filter
+        if positive_match:
+            subject_matches = chunk["subject"].str.contains(uri_substring)
+        else:
+            subject_matches = ~chunk["subject"].str.contains(uri_substring)
+        # objects matching the filter
+        if positive_match:
+            object_matches = chunk["object"].str.contains(uri_substring)
+        else:
+            object_matches = ~chunk["object"].str.contains(uri_substring)
+        # filter triples
+        chunk = chunk[subject_matches & object_matches]
+        n_triples_after = n_triples_after + len(chunk)
+        # write back to file
+        chunk.to_csv(
+            processed_dataset_filepath,
+            index=False,
+            header=True if i == 0 else False,
+            mode="w" if i == 0 else "a"
+        )
+
+    # print statistics (triples before and after filtering)
+    print("\nnumber of triples\nbefore filtering\tafter filtering")
+    print(f"{n_triples_before}\t\t{n_triples_after} ({round(n_triples_after / n_triples_before, 3)})")
+
+
+def fix_redirections(
+        dataset_filepath,
+        redirections_filepath,
+        processed_dataset_filepath,
+        subjects_only=False,
+        dataset_filetype="csv",
+        redirections_filetype="csv",
+        chunksize=2000000
+    ):
+    """
+    This function is used to correct redirected entities, that are listed in the redirections dataset.
+
+    :param dataset_filepath: file path of the file where triples are removed
+    :type dataset_filepath: str
+    :param redirections_filepath: file path of the redirections dataset
+    :type redirections_filepath: str
+    :param processed_dataset_filepath: file path which is used to store the dataset with removed triples
+    :type processed_dataset_filepath: str
+    :param subjects_only: if set to True only subjects are concidered for redirections, otherwise both subjects and objects
+    :type subjects_only: bool
+    :param dataset_filetype: file type, either "csv" or "ttl"
+    :type dataset_filetype: str
+    :param redirections_filetype: file type, either "csv" or "ttl"
+    :type redirections_filetype: str
+    :param chunksize: size of the chunks that are read when iterating over the file
+    :type chunksize: int
+    :return: None
+    """
+
+    # define and store file parsing arguments
+    csv_file_parsing_args = {}
+    ttl_file_parsing_args = {"sep": " ", "header": None, "names": ["subject", "predicate", "object", "."]}
+    if dataset_filetype == "csv":
+        dataset_file_parsing_args = csv_file_parsing_args
+    elif dataset_filetype == "ttl":
+        dataset_file_parsing_args = ttl_file_parsing_args
+    else:
+        print('File type can either be "csv" or "ttl"')
+        return
+    if redirections_filetype == "csv":
+        redirections_file_parsing_args = csv_file_parsing_args
+    elif redirections_filetype == "ttl":
+        redirections_file_parsing_args = ttl_file_parsing_args
+    else:
+        print('File type can either be "csv" or "ttl"')
+        return
+
+    try:
+        # iterate over dataset with triples whole entities are fixed (in case of redirections)
+        n_triples_total = 0
+        n_redirected_subjects = 0
+        n_redirected_objects = 0
+        for i, chunk in enumerate(pd.read_csv(dataset_filepath, chunksize=chunksize, **dataset_file_parsing_args)):
+            print(f"fix redirections (chunk {i+1})...")
+            if dataset_filetype == "ttl":
+                chunk = chunk.drop(columns=".")
+                # remove "<" and ">"
+                for col in chunk.columns:
+                    chunk[col] = chunk[col].str[1:-1]
+            n_triples_total += len(chunk)
+
+            # iterate over dataset containing redirections
+            for redirections_chunk in pd.read_csv(redirections_filepath, chunksize=chunksize, **redirections_file_parsing_args):
+                if redirections_filetype == "ttl":
+                    redirections_chunk = redirections_chunk.drop(columns=".")
+                    # remove "<" and ">"
+                    for col in redirections_chunk.columns:
+                        redirections_chunk[col] = redirections_chunk[col].str[1:-1]
+                redirections_chunk = redirections_chunk.drop(columns="predicate")
+                redirections_chunk = redirections_chunk.rename(columns={"subject": "entity", "object": "redirection"})
+                # fix redirected subjects
+                chunk = chunk.merge(redirections_chunk, left_on="subject", right_on="entity", how="left")
+                n_redirected_subjects += (~chunk["redirection"].isna()).sum()
+                chunk["redirection"] = chunk["redirection"].fillna(chunk["subject"])
+                chunk["subject"] = chunk["redirection"]
+                chunk = chunk.drop(columns=["entity", "redirection"])
+                # fix redirected objects
+                if not subjects_only:
+                    chunk = chunk.merge(redirections_chunk, left_on="object", right_on="entity", how="left")
+                    n_redirected_objects += (~chunk["redirection"].isna()).sum()
+                    chunk["redirection"] = chunk["redirection"].fillna(chunk["object"])
+                    chunk["object"] = chunk["redirection"]
+                    chunk = chunk.drop(columns=["entity", "redirection"])
+
+            # write back to file
+            chunk.to_csv(
+                processed_dataset_filepath,
+                index=False,
+                header=True if i == 0 else False,
+                mode="w" if i == 0 else "a"
+            )
+
+    except pd.errors.ParserError:
+        dataset_file_parsing_args = {"sep": ", "}
+        # iterate over dataset with triples whole entities are fixed (in case of redirections)
+        n_triples_total = 0
+        n_redirected_subjects = 0
+        n_redirected_objects = 0
+        for i, chunk in enumerate(pd.read_csv(dataset_filepath, chunksize=chunksize, **dataset_file_parsing_args)):
+            print(f"fix redirections (chunk {i+1})...")
+            if dataset_filetype == "ttl":
+                chunk = chunk.drop(columns=".")
+                # remove "<" and ">"
+                for col in chunk.columns:
+                    chunk[col] = chunk[col].str[1:-1]
+            n_triples_total += len(chunk)
+
+            # iterate over dataset containing redirections
+            for redirections_chunk in pd.read_csv(redirections_filepath, chunksize=chunksize, **redirections_file_parsing_args):
+                if redirections_filetype == "ttl":
+                    redirections_chunk = redirections_chunk.drop(columns=".")
+                    # remove "<" and ">"
+                    for col in redirections_chunk.columns:
+                        redirections_chunk[col] = redirections_chunk[col].str[1:-1]
+                redirections_chunk = redirections_chunk.drop(columns="predicate")
+                redirections_chunk = redirections_chunk.rename(columns={"subject": "entity", "object": "redirection"})
+                # fix redirected subjects
+                chunk = chunk.merge(redirections_chunk, left_on="subject", right_on="entity", how="left")
+                n_redirected_subjects += (~chunk["redirection"].isna()).sum()
+                chunk["redirection"] = chunk["redirection"].fillna(chunk["subject"])
+                chunk["subject"] = chunk["redirection"]
+                chunk = chunk.drop(columns=["entity", "redirection"])
+                # fix redirected objects
+                if not subjects_only:
+                    chunk = chunk.merge(redirections_chunk, left_on="object", right_on="entity", how="left")
+                    n_redirected_objects += (~chunk["redirection"].isna()).sum()
+                    chunk["redirection"] = chunk["redirection"].fillna(chunk["object"])
+                    chunk["object"] = chunk["redirection"]
+                    chunk = chunk.drop(columns=["entity", "redirection"])
+
+            # write back to file
+            chunk.to_csv(
+                processed_dataset_filepath,
+                index=False,
+                header=True if i == 0 else False,
+                mode="w" if i == 0 else "a"
+            )
+
+    # print statistics (number of redirected triples)
+    print(f"\nnumber of triples with redirected subject: {n_redirected_subjects} ({round(n_redirected_subjects / n_triples_total, 3)})")
+    if not subjects_only:
+        print(f"number of triples with redirected object: {n_redirected_objects} ({round(n_redirected_objects / n_triples_total, 3)})")
+
+
 def filter_properties(
         properties_dataset_filepath,
         filtered_property_types_filepath,
