@@ -1,8 +1,10 @@
-from pykeen.hpo import hpo_pipeline
+from pykeen.pipeline import pipeline
 from pykeen.triples import TriplesFactory
+from torch.nn.functional import normalize
+from pykeen.nn.init import xavier_uniform_, xavier_uniform_norm_
 
 # model name
-MODEL_NAME = "transE_hpo"
+MODEL_NAME = "transE_bordes_ht"
 
 # training, validation and test data file paths
 TRAIN_PATH = "../data/processed_data/train.tsv"
@@ -30,42 +32,48 @@ testing = TriplesFactory.from_path(
 )
 
 # train model
-hpo_pipeline_results = hpo_pipeline(
-    n_trials=20,
+results = pipeline(
     training=training,
-    validation=validation,
     testing=testing,
     model="TransE",
     training_loop="sLCWA",
-    # use adagrad optimizer
-    optimizer="Adagrad",
-    training_kwargs=dict(
-        num_epochs=100,
-        checkpoint_name=CHECKPOINT_NAME,
-    ),
-    model_kwargs_ranges=dict(
-        # optimize embedding dimension
-        embedding_dim=dict(type=int, low=100, high=600, q=100),
-        # optimize l_p norm applied in the interaction function
-        scoring_fct_norm=dict(type=int, low=1, high=2)
-    ),
-    negative_sampler="basic",
-    negative_sampler_kwargs=dict(
-        corruption_scheme=("head", "tail"),
-    ),
-    loss='MarginRankingLoss',
-    loss_kwargs_ranges=dict(
-        # optimize margin
-        margin=dict(type=float, low=1.0, high=2.0),
-    ),
-    # use learning rate scheduler
-    lr_scheduler="ExponentialLR",
     result_tracker="csv",
     result_tracker_kwargs=dict(
         name=RESULTS_TRACKER_PATH,
     ),
+    # epochs and batch size
+    training_kwargs=dict(
+        num_epochs=100,
+        batch_size=128,
+        checkpoint_name=CHECKPOINT_NAME,
+    ),
     random_seed=42,
+    # embedding size and scoring function norm
+    model_kwargs=dict(
+        embedding_dim=50,
+        scoring_fct_norm=2
+    ),
+    # negative sampling
+    negative_sampler="basic",
+    negative_sampler_kwargs=dict(
+        corruption_scheme=("head", "relation", "tail"),
+    ),
+    # loss
+    loss="MarginRankingLoss",
+    loss_kwargs=dict(
+        margin=1
+    ),
+    # optimizer
+    optimizer="SGD",
+    # regularization
+    regularizer=None,
+    # embedding normalization
+    entity_constrainer=normalize,
+    relation_constrainer=None,
+    # embedding initialization
+    entity_initializer=xavier_uniform_,
+    relation_initializer=xavier_uniform_norm_,
 )
 
 # save results
-hpo_pipeline_results.save_to_directory(RESULTS_DIR)
+results.save_to_directory(RESULTS_DIR)

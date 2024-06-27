@@ -1,8 +1,10 @@
 from pykeen.pipeline import pipeline
 from pykeen.triples import TriplesFactory
+from torch.nn.functional import normalize
+from pykeen.nn.init import xavier_uniform_, xavier_uniform_norm_
 
 # model name
-MODEL_NAME = "transE_model1"
+MODEL_NAME = "transE_bordes_ht"
 
 # training, validation and test data file paths
 TRAIN_PATH = "../data/processed_data/train.tsv"
@@ -35,20 +37,42 @@ results = pipeline(
     testing=testing,
     model="TransE",
     training_loop="sLCWA",
-    optimizer="Adam",
-    training_kwargs=dict(
-        num_epochs=1000,
-        checkpoint_name=CHECKPOINT_NAME,
-    ),
-    negative_sampler="basic",
-    negative_sampler_kwargs=dict(
-        corruption_scheme=("head", "tail"),
-    ),
     result_tracker="csv",
     result_tracker_kwargs=dict(
         name=RESULTS_TRACKER_PATH,
     ),
+    # epochs and batch size
+    training_kwargs=dict(
+        num_epochs=100,
+        batch_size=128,
+        checkpoint_name=CHECKPOINT_NAME,
+    ),
     random_seed=42,
+    # embedding size and scoring function norm
+    model_kwargs=dict(
+        embedding_dim=50,
+        scoring_fct_norm=2
+    ),
+    # negative sampling
+    negative_sampler="basic",
+    negative_sampler_kwargs=dict(
+        corruption_scheme=("head", "tail"),
+    ),
+    # loss
+    loss="MarginRankingLoss",
+    loss_kwargs=dict(
+        margin=1
+    ),
+    # optimizer
+    optimizer="SGD",
+    # regularization
+    regularizer=None,
+    # embedding normalization
+    entity_constrainer=normalize,
+    relation_constrainer=None,
+    # embedding initialization
+    entity_initializer=xavier_uniform_,
+    relation_initializer=xavier_uniform_norm_,
 )
 
 # save results
