@@ -1,53 +1,7 @@
 from pykeen.pipeline import pipeline
 from pykeen.triples import TriplesFactory
 from pykeen.nn.init import xavier_normal_
-
-from class_resolver import Hint, HintOrType, OptionalKwargs
-from torch.nn import functional
-from pykeen.models.nbase import ERModel
-from pykeen.nn import TransEInteraction
-from pykeen.nn.init import xavier_uniform_, xavier_uniform_norm_
-from pykeen.regularizers import Regularizer
-from pykeen.typing import Constrainer, Initializer
-
-class TransE_separate_regularizers(ERModel):
-    """
-    TransE model with separate regularizers for entity and relation.
-    """
-    def __init__(
-        self,
-        *,
-        embedding_dim: int = 50,
-        scoring_fct_norm: int = 1,
-        entity_initializer: Hint[Initializer] = xavier_uniform_,
-        entity_constrainer: Hint[Constrainer] = functional.normalize,
-        relation_initializer: Hint[Initializer] = xavier_uniform_norm_,
-        relation_constrainer: Hint[Constrainer] = None,
-        entity_regularizer: HintOrType[Regularizer] = "LpRegularizer",
-        entity_regularizer_kwargs: OptionalKwargs = dict(weight=1.32*10**-7, p=2),
-        relation_regularizer: HintOrType[Regularizer] = "LpRegularizer",
-        relation_regularizer_kwargs: OptionalKwargs = dict(weight=3.72*10**-18, p=2),
-        **kwargs,
-    ) -> None:
-        super().__init__(
-            interaction=TransEInteraction,
-            interaction_kwargs=dict(p=scoring_fct_norm),
-            entity_representations_kwargs=dict(
-                shape=embedding_dim,
-                initializer=entity_initializer,
-                constrainer=entity_constrainer,
-                regularizer=entity_regularizer,
-                regularizer_kwargs=entity_regularizer_kwargs,
-            ),
-            relation_representations_kwargs=dict(
-                shape=embedding_dim,
-                initializer=relation_initializer,
-                constrainer=relation_constrainer,
-                regularizer=relation_regularizer,
-                regularizer_kwargs=relation_regularizer_kwargs,
-            ),
-            **kwargs,
-        )
+from pykeen_extensions import ComplexNegativeSampler, TransE_separate_regularizers
 
 # model name
 MODEL_NAME = "transE_ruffinelli_ht"
@@ -100,9 +54,10 @@ results = pipeline(
         scoring_fct_norm=2
     ),
     # negative sampling
-    negative_sampler="basic",
+    negative_sampler=ComplexNegativeSampler,
     negative_sampler_kwargs=dict(
-        corruption_scheme=("head", "tail"),
+        n_subject_samples=2,
+        n_object_samples=56
     ),
     # loss
     loss="CrossEntropyLoss",
