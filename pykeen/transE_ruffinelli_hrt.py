@@ -4,7 +4,7 @@ from pykeen.nn.init import xavier_normal_
 from pykeen_extensions import ComplexNegativeSampler, TransE_separate_regularizers
 
 # model name
-MODEL_NAME = "transE_ruffinelli_ht"
+MODEL_NAME = "transE_ruffinelli_hrt"
 
 # training, validation and test data file paths
 TRAIN_PATH = "../data/processed_data/train.tsv"

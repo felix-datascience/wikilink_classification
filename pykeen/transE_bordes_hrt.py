@@ -4,7 +4,7 @@ from torch.nn.functional import normalize
 from pykeen.nn.init import xavier_uniform_, xavier_uniform_norm_
 
 # model name
-MODEL_NAME = "transE_bordes_ht"
+MODEL_NAME = "transE_bordes_hrt"
 
 # training, validation and test data file paths
 TRAIN_PATH = "../data/processed_data/train.tsv"
