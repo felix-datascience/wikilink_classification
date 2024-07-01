@@ -64,11 +64,11 @@ results = pipeline(
     # optimizer
     optimizer="Adagrad",
     optimizer_kwargs=dict(
-        lr=0.04122
+        lr=0.0003
     ),
     lr_scheduler="ReduceLROnPlateau",
     lr_scheduler_kwargs=dict(
-        patience=6
+        patience=5
     ),
     # embedding normalization
     entity_constrainer=None,
