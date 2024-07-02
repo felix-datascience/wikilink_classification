@@ -1,12 +1,14 @@
 from class_resolver import Hint, HintOrType, OptionalKwargs
 import torch
 from torch.nn import functional
+from torch.nn.init import uniform_
 from pykeen.sampling import NegativeSampler, BasicNegativeSampler
 from pykeen.models.nbase import ERModel
-from pykeen.nn import TransEInteraction
+from pykeen.nn import TransEInteraction, ComplExInteraction
 from pykeen.nn.init import xavier_uniform_, xavier_uniform_norm_
 from pykeen.regularizers import Regularizer
 from pykeen.typing import Constrainer, Initializer
+from typing import Optional
 
 
 class ComplexNegativeSampler(NegativeSampler):
@@ -96,6 +98,50 @@ class TransE_separate_regularizers(ERModel):
                 constrainer=relation_constrainer,
                 regularizer=relation_regularizer,
                 regularizer_kwargs=relation_regularizer_kwargs,
+            ),
+            **kwargs,
+        )
+
+
+class ComplEx_dropout_and_separate_regularizers(ERModel):
+    """
+    ComplEx model with dropout and separate regularizers for entity and relation embeddings.
+    """
+    def __init__(
+        self,
+        *,
+        embedding_dim: int = 200,
+        entity_initializer: Hint[Initializer] = uniform_,
+        entity_initializer_kwargs: OptionalKwargs = dict(a=-0.85, b=0.85),
+        relation_initializer: Hint[Initializer] = uniform_,
+        relation_initializer_kwargs: OptionalKwargs = dict(a=-0.85, b=0.85),
+        entity_regularizer: HintOrType[Regularizer] = "LpRegularizer",
+        entity_regularizer_kwargs: OptionalKwargs = dict(weight=4.52*10**-6, p=3),
+        relation_regularizer: HintOrType[Regularizer] = "LpRegularizer",
+        relation_regularizer_kwargs: OptionalKwargs = dict(weight=4.19*10**-10, p=3),
+        entity_dropout: Optional[float] = 0.36,
+        relation_dropout: Optional[float] = 0.31,
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            interaction=ComplExInteraction,
+            entity_representations_kwargs=dict(
+                shape=embedding_dim,
+                initializer=entity_initializer,
+                initializer_kwargs=entity_initializer_kwargs,
+                dtype=torch.cfloat,
+                regularizer=entity_regularizer,
+                regularizer_kwargs=entity_regularizer_kwargs,
+                dropout=entity_dropout,
+            ),
+            relation_representations_kwargs=dict(
+                shape=embedding_dim,
+                initializer=relation_initializer,
+                initializer_kwargs=relation_initializer_kwargs,
+                dtype=torch.cfloat,
+                regularizer=relation_regularizer,
+                regularizer_kwargs=relation_regularizer_kwargs,
+                dropout=relation_dropout,
             ),
             **kwargs,
         )
