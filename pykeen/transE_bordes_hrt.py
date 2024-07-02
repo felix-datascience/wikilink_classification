@@ -48,10 +48,16 @@ results = pipeline(
         checkpoint_name=CHECKPOINT_NAME,
     ),
     random_seed=42,
-    # embedding size and scoring function norm
     model_kwargs=dict(
+        # embedding size and scoring function norm
         embedding_dim=50,
-        scoring_fct_norm=2
+        scoring_fct_norm=2,
+        # embedding normalization
+        entity_constrainer=normalize,
+        relation_constrainer=None,
+        # embedding initialization
+        entity_initializer=xavier_uniform_,
+        relation_initializer=xavier_uniform_norm_,
     ),
     # negative sampling
     negative_sampler="basic",
@@ -70,12 +76,6 @@ results = pipeline(
     ),
     # regularization
     regularizer=None,
-    # embedding normalization
-    entity_constrainer=normalize,
-    relation_constrainer=None,
-    # embedding initialization
-    entity_initializer=xavier_uniform_,
-    relation_initializer=xavier_uniform_norm_,
 )
 
 # save results

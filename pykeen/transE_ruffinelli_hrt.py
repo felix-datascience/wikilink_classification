@@ -48,10 +48,16 @@ results = pipeline(
         checkpoint_name=CHECKPOINT_NAME,
     ),
     random_seed=42,
-    # embedding size and scoring function norm
     model_kwargs=dict(
+        # embedding size and scoring function norm
         embedding_dim=512,
-        scoring_fct_norm=2
+        scoring_fct_norm=2,
+        # embedding normalization
+        entity_constrainer=None,
+        relation_constrainer=None,
+        # embedding initialization
+        entity_initializer=xavier_normal_,
+        relation_initializer=xavier_normal_,
     ),
     # negative sampling
     negative_sampler=ComplexNegativeSampler,
@@ -71,12 +77,6 @@ results = pipeline(
     lr_scheduler_kwargs=dict(
         patience=5
     ),
-    # embedding normalization
-    entity_constrainer=None,
-    relation_constrainer=None,
-    # embedding initialization
-    entity_initializer=xavier_normal_,
-    relation_initializer=xavier_normal_,
 )
 
 # save results
