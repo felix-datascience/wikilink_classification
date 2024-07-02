@@ -65,6 +65,9 @@ results = pipeline(
     ),
     # optimizer
     optimizer="SGD",
+    optimizer_kwargs=dict(
+        lr=0.01
+    ),
     # regularization
     regularizer=None,
     # embedding normalization
