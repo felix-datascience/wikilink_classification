@@ -57,7 +57,7 @@ def true_properties_matrix(filepath):
     """
     true_props = pd.read_csv(filepath, sep="\t", names=["subject", "predicate", "object"])
     true_props["dummy"] = 1
-    true_props = true_props.pivot(index=["subject", "object"], columns="predicate", values="dummy")
+    true_props = true_props.pivot_table(index=["subject", "object"], columns="predicate", values="dummy")
     true_props = true_props.fillna(0)
     true_props = true_props.reset_index()
     # convert to integers
