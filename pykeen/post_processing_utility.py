@@ -1,15 +1,89 @@
 import pandas as pd
 import numpy as np
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 
 
-def extract_domain_range_filter(ontology_df, filtered_property_types_df):
+def get_expanded_subclass_relationships(ontology_df, depth_limit=999, blacklist=[]):
+    """
+    This function recursively expands the subclass relationships in the ontology.
+    
+    E.g. the ontology contains the triples:
+    - Academic, subClassOf, Person
+    - Person, subClassOf, Animal
+    The function would add the triple:
+    - Academic, subClassOf, Animal
+    
+    This procedure is repeated until no new subclass relationships can be added or for the specied number of recusions
+    (determined with depth_limit parameter).
+
+    :param ontology_df: dataframe containing ontology triples
+    :type ontology_df: pd.DataFrame
+    :param depth_limit: limits of the number of steps in the hierarchy that are followed to extend the subclass relationships
+    :type depth_limit: int
+    :param blacklist: any subclass-superclass pair with this type as superclass will be removed (can be used to remove too generic types)
+    :type_blacklist: list
+    :return: dataframe containing pairs of subclass-superclass pairs
+    """
+    subclasses = ontology_df[ontology_df["predicate"] == "http://www.w3.org/2000/01/rdf-schema#subClassOf"]
+    expanded_subclasses = subclasses.copy()
+    expanded_subclasses = expanded_subclasses.drop(columns="predicate")
+    expanded_subclasses = expanded_subclasses.rename(columns={"subject": "superclass0", "object": "superclass1"})
+    
+    # create chains of subclass relationships
+    expanded_classes = True
+    superclass_idx = 1
+    while expanded_classes == True and superclass_idx < depth_limit:
+        expanded_subclasses = expanded_subclasses.merge(subclasses, left_on=f"superclass{superclass_idx}", right_on="subject", how="left")
+        expanded_subclasses = expanded_subclasses.drop(columns=["predicate", "subject"])
+        superclass_idx += 1
+        expanded_subclasses = expanded_subclasses.rename(columns={"object": f"superclass{superclass_idx}"})
+        if (~expanded_subclasses[f"superclass{superclass_idx}"].isna()).sum() > 0:
+            expanded_classes = True
+        else:
+            expanded_classes = False
+        
+    # create every possible pair of subclass-class relations
+    expanded_subclass_pairs = pd.DataFrame()
+    for i in range(superclass_idx):
+        for j in range(i+1, superclass_idx+1):
+            subclass_col = f"superclass{i}"
+            superclass_col = f"superclass{j}"
+            pairs = expanded_subclasses[[subclass_col, superclass_col]]
+            pairs = pairs.rename(columns={subclass_col: "subclass", superclass_col: "superclass"})
+            pairs = pairs.dropna()
+            expanded_subclass_pairs = pd.concat([expanded_subclass_pairs, pairs], axis=0)
+            expanded_subclass_pairs = expanded_subclass_pairs.drop_duplicates()
+            expanded_subclass_pairs = expanded_subclass_pairs.reset_index(drop=True)
+
+    # remove blacklist types
+    expanded_subclass_pairs = expanded_subclass_pairs[~expanded_subclass_pairs["superclass"].isin(blacklist)]
+
+    return expanded_subclass_pairs
+
+
+def extract_domain_range_filter(
+    ontology_df,
+    filtered_property_types_df,
+    upwards_extension_depth_limit=999,
+    upwards_extension_blacklist=[]
+):
     """
     Creates two matrices that can be used for filtering relevant properties for subject and object entity type.
+    The filter is based on the domain and range restrictions in the ontology. The tolerated types (of the range
+    and domain) are first expanded downwards, meaning all subclasses of the type that is listed in the domain
+    or range restriction are tolerated as well. In an optional second step the tolerated types are expanded
+    upwards for a specified number of steps in the hierarchy (upwards_extension_depth_limit). To avoid this, set
+    the parameter to 0. In this upwards extension step, a blacklist can be provided to prevent too generic types
+    to be tolerated (e.g. owl:Thing).
 
     :param ontology_df: dataframe containing the ontology triples
     :type ontology_df: pd.DataFrame
     :param filtered_property_types_df: dataframe containing the list of filtered property types
     :type filtered_property_types_df: pd.DataFrame
+    :param upwards_extension_depth_limit: limits of the number of steps in the hierarchy that are followed upwards to extend the subclass relationships
+    :type upwards_extension_depth_limit: int
+    :param upwards_extension_blacklist: can be used to prevent too generic types from being introduced in the upwards expansion step
+    :type upwards_extension_blacklist: list
     :return: two pandas dataframes containing the domain / range filter matrices
     """
     domain_range = ontology_df[
@@ -20,6 +94,25 @@ def extract_domain_range_filter(ontology_df, filtered_property_types_df):
     # (only keep range and domain restrictions for the subset of filtered property types)
     domain_range = domain_range.merge(filtered_property_types_df, left_on="subject", right_on="filtered_property_types")
     domain_range = domain_range.drop(columns="filtered_property_types")
+    # expand domain and range restrictions downwards with subclass relationships
+    expanded_subclass_relationships = get_expanded_subclass_relationships(ontology_df)
+    domain_range_downwards_expanded = domain_range.merge(expanded_subclass_relationships, left_on="object", right_on="superclass")
+    domain_range_downwards_expanded = domain_range_downwards_expanded.drop(columns=["object", "superclass"])
+    domain_range_downwards_expanded = domain_range_downwards_expanded.rename(columns={"subclass": "object"})
+    domain_range = pd.concat([domain_range, domain_range_downwards_expanded])
+    domain_range = domain_range.drop_duplicates()
+    # expand domain and range restrictions upwards with subclass relationships
+    if upwards_extension_depth_limit > 0:
+        expanded_subclass_relationships = get_expanded_subclass_relationships(
+            ontology_df,
+            depth_limit=upwards_extension_depth_limit,
+            blacklist=upwards_extension_blacklist
+        )
+        domain_range_upwards_expanded = domain_range.merge(expanded_subclass_relationships, left_on="object", right_on="subclass")
+        domain_range_upwards_expanded = domain_range_upwards_expanded.drop(columns=["object", "subclass"])
+        domain_range_upwards_expanded = domain_range_upwards_expanded.rename(columns={"superclass": "object"})
+        domain_range = pd.concat([domain_range, domain_range_upwards_expanded])
+        domain_range = domain_range.drop_duplicates()
     # create matrix for filtering relevant properties for each subject entity type
     domain_filter = domain_range[domain_range["predicate"] == "http://www.w3.org/2000/01/rdf-schema#domain"]
     domain_filter = domain_filter.drop(columns="predicate")
@@ -69,89 +162,25 @@ def read_entity_types(triples_df, types_filepath):
     return entity_types
 
 
-def get_expanded_subclass_relationships(ontology_df):
-    """
-    This function recursively expands the subclass relationships in the ontology.
-    E.g. the ontology contains the triples:
-    - Academic, subClassOf, Person
-    - Person, subClassOf, Animal
-    The function would add the triple:
-    - Academic, subClassOf, Animal
-    This procedure is repeated until no new subclass relationships can be added.
-
-    :param ontology_df: dataframe containing ontology triples
-    :type ontology_df: pd.DataFrame
-    :return: dataframe containing pairs of subclass-superclass pairs
-    """
-    subclasses = ontology_df[ontology_df["predicate"] == "http://www.w3.org/2000/01/rdf-schema#subClassOf"]
-    expanded_subclasses = subclasses.copy()
-    expanded_subclasses = expanded_subclasses.drop(columns="predicate")
-    expanded_subclasses = expanded_subclasses.rename(columns={"subject": "superclass0", "object": "superclass1"})
-    
-    # create chains of subclass relationships
-    expanded_classes = True
-    superclass_idx = 1
-    while expanded_classes == True:
-        expanded_subclasses = expanded_subclasses.merge(subclasses, left_on=f"superclass{superclass_idx}", right_on="subject", how="left")
-        expanded_subclasses = expanded_subclasses.drop(columns=["predicate", "subject"])
-        superclass_idx += 1
-        expanded_subclasses = expanded_subclasses.rename(columns={"object": f"superclass{superclass_idx}"})
-        if (~expanded_subclasses[f"superclass{superclass_idx}"].isna()).sum() > 0:
-            expanded_classes = True
-        else:
-            expanded_classes = False
-        
-    # create every possible pair of subclass-class relations
-    expanded_subclass_pairs = pd.DataFrame()
-    for i in range(superclass_idx):
-        for j in range(i+1, superclass_idx+1):
-            subclass_col = f"superclass{i}"
-            superclass_col = f"superclass{j}"
-            pairs = expanded_subclasses[[subclass_col, superclass_col]]
-            pairs = pairs.rename(columns={subclass_col: "subclass", superclass_col: "superclass"})
-            pairs = pairs.dropna()
-            expanded_subclass_pairs = pd.concat([expanded_subclass_pairs, pairs], axis=0)
-            expanded_subclass_pairs = expanded_subclass_pairs.drop_duplicates()
-            expanded_subclass_pairs = expanded_subclass_pairs.reset_index(drop=True)
-
-    return expanded_subclass_pairs
-
-
-def expand_entity_types(entity_types_df, ontology_df):
-    """
-    This function expands the provided entity - entity type pairs with their superclasses.
-
-    :param entity_types_df: dataframe containing pairs of entity and entity type
-    :type entity_types_df: pd.DataFrame
-    :param ontology_df: dataframe containing ontology triples
-    :type ontology_df: pd.DataFrame
-    :return: dataframe containing pairs of entity and entity type extended with superclasses
-    """
-    expanded_subclasses = get_expanded_subclass_relationships(ontology_df)
-    expanded_entity_types = entity_types_df.merge(expanded_subclasses, left_on="entity_type", right_on="subclass")
-    expanded_entity_types = expanded_entity_types.drop(columns=["entity_type", "subclass"])
-    expanded_entity_types = expanded_entity_types.rename(columns={"superclass": "entity_type"})
-    expanded_entity_types = pd.concat([entity_types_df, expanded_entity_types])
-    expanded_entity_types = expanded_entity_types.drop_duplicates()
-    expanded_entity_types = expanded_entity_types.reset_index()
-
-    return expanded_entity_types
-
-
 def domain_range_filter_triples(
         triples_df,
-        types_filepath,
+        specific_types_filepath,
         ontology_df,
         filtered_property_types_df,
-        handle_untyped_entities="strict"
+        handle_untyped_entities="strict",
+        upwards_extension_depth_limit=999,
+        upwards_extension_blacklist=[]
     ):
     """
     Creates a matrix indicating which properties are relevant to a pair of entities (depending on their types).
+    The filtering is based on the extract_domain_range_filter function. Additionally, the handling of untyped
+    entities can be controlled to either allow or prevent entities without any types to be considered in the
+    range / domain of a restricted property.
 
     :param triples_df: triples for whose entity pairs the subsets of relevant property types are returned
     :type triples_df: pd.DataFrame
-    :param types_filepath: file path of the types dataset
-    :type types_filepath: str
+    :param specific_types_filepath: file path of the specific types dataset
+    :type specific_types_filepath: str
     :param ontology_df: dataframe containing ontology triples
     :type ontology_df: pd.DataFrame
     :param filtered_property_types_df: dataframe containing list of filtered property types
@@ -159,6 +188,10 @@ def domain_range_filter_triples(
     :param handle_untyped_entities: if set to "strict" entities without types can only be in range/domain of properties without restrictions,
         if set to "flexible" they can be in range/domain of any property
     :type handle_untyped_entities: str
+    :param upwards_extension_depth_limit: limits of the number of steps in the hierarchy that are followed upwards to extend the subclass relationships
+    :type upwards_extension_depth_limit: int
+    :param upwards_extension_blacklist: can be used to prevent too generic types from being introduced in the upwards expansion step
+    :type upwards_extension_blacklist: list
     :return: dataframe annotating which properties (columns) are relevant for a pair of entities (rows)
     """
     if handle_untyped_entities == "strict":
@@ -170,11 +203,15 @@ def domain_range_filter_triples(
         return None
     
     # read entity types
-    entity_types = read_entity_types(triples_df, types_filepath)
-    # expand entity types with superclasses
-    entity_types = expand_entity_types(entity_types, ontology_df)
+    entity_types = read_entity_types(triples_df, specific_types_filepath)
+    
     # extract domain and range restrictions from ontology
-    domain_filter, range_filter = extract_domain_range_filter(ontology_df, filtered_property_types_df)
+    domain_filter, range_filter = extract_domain_range_filter(
+        ontology_df,
+        filtered_property_types_df,
+        upwards_extension_depth_limit=upwards_extension_depth_limit,
+        upwards_extension_blacklist=upwards_extension_blacklist
+    )
     
     # add entity types that don't appear in the domain restrictions and set their values to 0
     remaining_entity_types = pd.DataFrame(columns=domain_filter.columns)
@@ -204,7 +241,7 @@ def domain_range_filter_triples(
     no_range_restrictions_props = no_range_restrictions_props.fillna(1)
     range_filter = pd.concat([range_filter, no_range_restrictions_props], axis=1)
 
-    # merge with entity types and aggregate possible property types
+    # merge with entity types and set possible property types to 1 if entity has at least one of the required entity types
     entities_domain_filter = entity_types.merge(domain_filter, on="entity_type")
     entities_domain_filter = entities_domain_filter.drop(columns="entity_type")
     entities_domain_filter = entities_domain_filter.groupby("entity").max()
@@ -216,9 +253,9 @@ def domain_range_filter_triples(
 
     # combine subject and object restrictions for each triple
     subject_restrictions = triples_df["subject"].rename("entity").to_frame()
-    subject_restrictions = subject_restrictions.merge(entities_domain_filter.reset_index(), on="entity", how="left")
+    subject_restrictions = subject_restrictions.merge(entities_domain_filter, on="entity", how="left")
     object_restrictions = triples_df["object"].rename("entity").to_frame()
-    object_restrictions = object_restrictions.merge(entities_range_filter.reset_index(), on="entity", how="left")
+    object_restrictions = object_restrictions.merge(entities_range_filter, on="entity", how="left")
     # fill rows of entities without types
     subject_restrictions[no_domain_restrictions_props.columns] = subject_restrictions[no_domain_restrictions_props.columns].fillna(1)
     object_restrictions[no_range_restrictions_props.columns] = object_restrictions[no_range_restrictions_props.columns].fillna(1)
@@ -247,3 +284,25 @@ def domain_range_filter_triples(
     triple_restrictions = triple_restrictions.reset_index(drop=True)
 
     return triple_restrictions
+
+
+def evaluate_filter(ground_truth, filter):
+    """
+    Returns a pandas dataframe containing accuracy, precision and recall of a domain and range filter
+    for each property type and the mean of all property types (equally weighted).
+
+    :param ground_truth: ground truth data in matrix form
+    :type ground_truth: pd.DataFrame
+    :param filter: filter in the same format as ground_truth
+    :type filter: pd.DataFrame
+    :return: pandas dataframe with 
+    """
+    props = np.setdiff1d(ground_truth.columns, ["subject", "object"])
+    scores = pd.DataFrame(index=props, columns=["accuracy", "precision", "recall"])
+    for prop in props:
+        scores.loc[prop, "accuracy"] = accuracy_score(ground_truth[prop], filter[prop])
+        scores.loc[prop, "precision"] = precision_score(ground_truth[prop], filter[prop])
+        scores.loc[prop, "recall"] = recall_score(ground_truth[prop], filter[prop])
+    scores = scores._append(scores.mean().rename("mean"))
+    
+    return scores
