@@ -42,7 +42,7 @@ results = pipeline(
     ),
     # epochs and batch size
     training_kwargs=dict(
-        num_epochs=100,
+        num_epochs=10,
         batch_size=100,
         checkpoint_name=CHECKPOINT_NAME,
     ),
