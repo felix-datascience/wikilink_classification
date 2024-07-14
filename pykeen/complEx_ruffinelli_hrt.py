@@ -5,7 +5,7 @@ from pykeen_extensions import ComplexNegativeSampler, ComplEx_dropout_and_separa
 import torch
 
 # model name
-MODEL_NAME = "complEx_ruffinelli_ht"
+MODEL_NAME = "complEx_ruffinelli_hrt"
 
 # training, validation and test data file paths
 TRAIN_PATH = "../data/processed_data/train.tsv"
@@ -80,7 +80,7 @@ results = pipeline(
     negative_sampler=ComplexNegativeSampler,
     negative_sampler_kwargs=dict(
         n_subject_samples=557,
-        n_predicate_samples=10,
+        n_predicate_samples=100,
         n_object_samples=376,
     ),
     # loss
