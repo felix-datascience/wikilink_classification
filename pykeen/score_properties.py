@@ -2,9 +2,7 @@ import sys
 import os
 import pandas as pd
 import torch
-from pykeen.constants import PYKEEN_CHECKPOINTS
 from pykeen.triples import TriplesFactory
-from pykeen.models import TransE
 from prediction_and_evaluation_utility import true_properties_matrix, score_properties
 
 # model name
