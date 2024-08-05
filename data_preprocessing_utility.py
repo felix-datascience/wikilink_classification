@@ -273,11 +273,9 @@ def fix_redirections(
         n_redirected_objects = 0
         for i, chunk in enumerate(pd.read_csv(dataset_filepath, chunksize=chunksize, **dataset_file_parsing_args)):
             print(f"fix redirections (chunk {i+1})...")
-            if dataset_filetype == "ttl":
-                chunk = chunk.drop(columns=".")
-                # remove "<" and ">"
-                for col in chunk.columns:
-                    chunk[col] = chunk[col].str[1:-1]
+            # remove " characters
+            for col in chunk.columns:
+                chunk[col] = chunk[col].str[1:-1]
             n_triples_total += len(chunk)
 
             # iterate over dataset containing redirections
