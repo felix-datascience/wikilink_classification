@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # This script is intended to be used on BWUniCluster 2.0 after the setup scrip has been run.
-# It adds data to the knowledge graph that helps analyze it efficiently and that is also used
-# when creating datasets for creating embeddings and training the classifier.
+# It augments the entities in the graph with information like their number of types, degree centrality
+# and number of mutual wikilinks.
 
 CURRENT_DIR=$(pwd)
 LOG_FILE_PATH=$CURRENT_DIR/neo4j_augment_graph_log.txt

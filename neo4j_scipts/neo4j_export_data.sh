@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # This script is intended to be used on BWUniCluster 2.0 after the setup and data augmentation scripts have been run.
-# It performs a data analysis to gather insights about the knowledge graph, especially regarding entities that are
-# linked with wikilinks.
+# It exports multiple datasets from the graph.
 
 CURRENT_DIR=$(pwd)
 LOG_FILE_PATH=$CURRENT_DIR/neo4j_export_data_log.txt
