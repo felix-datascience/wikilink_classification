@@ -12,6 +12,7 @@ MODEL_NAME = sys.argv[1]
 TRAIN_PATH = "../data/processed_data/train.tsv"
 VAL_PATH = "../data/processed_data/val.tsv"
 TEST_PATH = "../data/processed_data/test.tsv"
+TEST_UNLABELED_FILEPATH = "../data/processed_data/test_unlabeled.tsv"
 VAL_MATRIX_FILEPATH = "../data/processed_data/val_matrix.csv"
 TEST_MATRIX_FILEPATH = "../data/processed_data/test_matrix.csv"
 # model dependent filepaths
@@ -21,6 +22,7 @@ RELATION_TO_ID_FILEPATH = f"results/{MODEL_NAME}/training_triples/relation_to_id
 SCORES_DIR = f"../data/predictions/{MODEL_NAME}/"
 VAL_PROPERTY_SCORES_FILEPATH = f"{SCORES_DIR}val_scores.csv"
 TEST_PROPERTY_SCORES_FILEPATH = f"{SCORES_DIR}test_scores.csv"
+TEST_UNLABELED_PROPERTY_SCORES_FILEPATH = f"{SCORES_DIR}test_unlabeled_scores.csv"
 
 # create directory for storing property scores (if it doesn't exist yet)
 if not os.path.isdir(SCORES_DIR):
@@ -43,6 +45,8 @@ else:
 # take entity pairs from validation and testing sets
 entity_pairs_val = true_properties_val[["subject", "object"]].to_numpy()
 entity_pairs_test = true_properties_test[["subject", "object"]].to_numpy()
+entity_pairs_test_unlabeled = pd.read_csv(TEST_UNLABELED_FILEPATH, sep="\t", names=["subject", "predicate", "object"])
+entity_pairs_test_unlabeled = entity_pairs_test_unlabeled[["subject", "object"]].to_numpy()
 
 # load training triples factory and model
 entity_to_id_dict = pd.read_csv(ENTITY_TO_ID_FILEPATH, compression="gzip", sep="\t")
@@ -63,3 +67,7 @@ property_scores_val.to_csv(VAL_PROPERTY_SCORES_FILEPATH, index=False)
 # generate property scores for testing set
 property_scores_test = score_properties(entity_pairs_test, model, training, relation_to_id_dict)
 property_scores_test.to_csv(TEST_PROPERTY_SCORES_FILEPATH, index=False)
+
+# generate property scores for unlabeled testing set
+property_scores_test_unlabeled = score_properties(entity_pairs_test_unlabeled, model, training, relation_to_id_dict)
+property_scores_test_unlabeled.to_csv(TEST_UNLABELED_PROPERTY_SCORES_FILEPATH, index=False)
