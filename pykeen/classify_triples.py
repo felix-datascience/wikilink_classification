@@ -67,9 +67,8 @@ predictions_test_tbf = classify_triples(property_scores_test, thresholds_before_
 predictions_test_tbf[props] = test_relation_filter[props] * predictions_test_tbf[props]
 predictions_test_tbf.to_csv(TEST_PREDS_TBF_FILEPATH, index=False)
 predictions_test_unlabeled_tbf = classify_triples(property_scores_test_unlabeled, thresholds_before_filter)
-predictions_test_unlabeled_tbf[props] = \
-    test_unlabeled_relation_filter.sort_values(["subject", "object"]).reset_index()[props] \
-    * predictions_test_unlabeled_tbf.sort_values(["subject", "object"]).reset_index()[props]
+predictions_test_unlabeled_tbf = predictions_test_unlabeled_tbf.sort_values(["subject", "object"]).reset_index()
+predictions_test_unlabeled_tbf[props] = test_unlabeled_relation_filter[props] * predictions_test_unlabeled_tbf[props]
 predictions_test_unlabeled_tbf.to_csv(TEST_UNLABELED_PREDS_TBF_FILEPATH, index=False)
 # predictions with ontology-based filtering and thresholds determined after filtering
 predictions_val_taf = classify_triples(property_scores_val, thresholds_after_filter)
@@ -79,9 +78,8 @@ predictions_test_taf = classify_triples(property_scores_test, thresholds_after_f
 predictions_test_taf[props] = test_relation_filter[props] * predictions_test_taf[props]
 predictions_test_taf.to_csv(TEST_PREDS_TAF_FILEPATH, index=False)
 predictions_test_unlabeled_taf = classify_triples(property_scores_test_unlabeled, thresholds_after_filter)
-predictions_test_unlabeled_taf[props] = \
-    test_unlabeled_relation_filter.sort_values(["subject", "object"]).reset_index()[props] \
-    * predictions_test_unlabeled_taf.sort_values(["subject", "object"]).reset_index()[props]
+predictions_test_unlabeled_taf = predictions_test_unlabeled_taf.sort_values(["subject", "object"]).reset_index()
+predictions_test_unlabeled_taf[props] = test_unlabeled_relation_filter[props] * predictions_test_unlabeled_taf[props]
 predictions_test_unlabeled_taf.to_csv(TEST_UNLABELED_PREDS_TAF_FILEPATH, index=False)
 
 # run short evaluation and save files
