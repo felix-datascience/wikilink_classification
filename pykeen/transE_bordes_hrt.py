@@ -12,7 +12,7 @@ VAL_PATH = "../data/processed_data/val.tsv"
 TEST_PATH = "../data/processed_data/test.tsv"
 
 # results, tracker and checkpoint file paths
-RESULTS_DIR = f"results/{MODEL_NAME}"
+RESULTS_DIR = f"../data/model_results/{MODEL_NAME}"
 RESULTS_TRACKER_PATH = f"{MODEL_NAME}.csv"
 CHECKPOINT_NAME = f"{MODEL_NAME}_checkpoint.pt"
 
