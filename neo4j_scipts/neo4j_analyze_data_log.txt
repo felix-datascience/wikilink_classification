@@ -1,0 +1,174 @@
+[04:28:35] * Start neo4j data analysis...
+
+[WARN  tini (167670)] Tini is not running as PID 1 and isn't registered as a child subreaper.
+Zombie processes will not be re-parented to Tini, so zombie reaping won't work.
+To fix the problem, use the -s option or set the environment variable TINI_SUBREAPER to register Tini as a child subreaper, or run Tini as PID 1.
+[0.294s][warning][os,container] Duplicate cpuset controllers detected. Picking /sys/fs/cgroup/cpuset, skipping /sys/fs/cgroup/cpuset.
+Directories in use:
+home:         /var/lib/neo4j
+config:       /var/lib/neo4j/conf
+logs:         /logs
+plugins:      /var/lib/neo4j/plugins
+import:       /var/lib/neo4j
+data:         /var/lib/neo4j/data
+certificates: /var/lib/neo4j/certificates
+licenses:     /var/lib/neo4j/licenses
+run:          /var/lib/neo4j/run
+Starting Neo4j.
+Started neo4j (pid:167880). It is available at http://0.0.0.0:7474
+There may be a short delay until the server is ready.
+[0.029s][warning][os,container] Duplicate cpuset controllers detected. Picking /sys/fs/cgroup/cpuset, skipping /sys/fs/cgroup/cpuset.
+Stopping Neo4j........... stopped.
+
+[08:37:15] * Data analysis script output:
+
+[0.001s][warning][os,container] Duplicate cpuset controllers detected. Picking /sys/fs/cgroup/cpuset, skipping /sys/fs/cgroup/cpuset.
+STATUS
+"In-, out- and undirected degree of all links"
+STATUS
+"In-degree"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+8.694991734179421, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 4.0, 11.0, 24.0, 107.0, 708.0, 1051615.0
+STATUS
+"Out-degree"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+8.694991734182372, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 5.0, 25.0, 45.0, 120.0, 386.0, 12462.0
+STATUS
+"Undirected degree"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+17.389983468365855, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 4.0, 13.0, 37.0, 69.0, 220.0, 998.0, 1051615.0
+STATUS
+"In-, out- and undirected degree of wikilinks"
+STATUS
+"In-degree"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+7.986700978206566, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 4.0, 11.0, 23.0, 101.0, 650.0, 1051615.0
+STATUS
+"Out-degree"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+7.986700978209812, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 4.0, 22.0, 40.0, 115.0, 381.0, 12462.0
+STATUS
+"Undirected degree"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+15.97340195641557, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 3.0, 12.0, 34.0, 63.0, 209.0, 939.0, 1051615.0
+STATUS
+"In-, out- and undirected degree of all links except wikilinks"
+STATUS
+"In-degree"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+0.7082907559754174, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 6.0, 64.0, 139616.0
+STATUS
+"Out-degree"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+0.7082907559755194, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 5.0, 11.0, 28.0, 1057.0
+STATUS
+"Undirected degree"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+1.4165815119510299, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 6.0, 17.0, 72.0, 139645.0
+STATUS
+"Distribution of number of mutual Wikilinks per entity"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+0.960667020845491, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 4.0, 19.0, 78.0, 1313.0
+STATUS
+"Count of unique properties"
+count(*)
+627
+STATUS
+"Most common properties"
+type, value.count
+"http://dbpedia.org/ontology/wikiPageWikiLink", 256993708
+"http://dbpedia.org/ontology/team", 3138832
+"http://dbpedia.org/ontology/careerStation", 1716420
+"http://dbpedia.org/ontology/birthPlace", 1486583
+"http://dbpedia.org/ontology/subdivision", 1090641
+"http://dbpedia.org/ontology/country", 792700
+"http://dbpedia.org/ontology/starring", 548303
+"http://dbpedia.org/ontology/location", 540617
+"http://dbpedia.org/ontology/type", 493532
+"http://dbpedia.org/ontology/currentMember", 485270
+STATUS
+"Distribution of number of entities per property"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+444985.65869218507, 1, 37, 157, 447, 948, 1887, 4424, 9695, 21034, 58540, 129083, 548303, 256993708, 256993708
+STATUS
+"Distribution of number of types per entity"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+1.6674716235973852, 0, 0, 0, 0, 0, 0, 0, 0, 3, 7, 13, 15, 16, 23
+STATUS
+"Count of unique types"
+count of unique types
+772
+STATUS
+"Most common types"
+label, value.count
+"http://www.w3.org/2002/07/owl#Thing", 5465152
+"http://dbpedia.org/ontology/TimePeriod", 2091566
+"http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#TimeInterval", 2091566
+"http://dbpedia.org/ontology/Species", 1975461
+"http://dbpedia.org/ontology/Eukaryote", 1968827
+"http://www.wikidata.org/entity/Q19088", 1968827
+"http://dbpedia.org/ontology/Animal", 1957965
+"http://www.wikidata.org/entity/Q729", 1957965
+"http://www.wikidata.org/entity/Q5", 1860208
+"http://schema.org/Person", 1860208
+"http://www.wikidata.org/entity/Q215627", 1860208
+"http://dbpedia.org/ontology/Person", 1860208
+"http://xmlns.com/foaf/0.1/Person", 1860208
+"http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#NaturalPerson", 1860208
+"http://dbpedia.org/ontology/CareerStation", 1731520
+"http://schema.org/Place", 759924
+"http://dbpedia.org/ontology/Place", 759924
+"http://dbpedia.org/ontology/Location", 759924
+"http://www.wikidata.org/entity/Q386724", 623392
+"http://dbpedia.org/ontology/Work", 623392
+"http://schema.org/CreativeWork", 623392
+"http://dbpedia.org/ontology/PopulatedPlace", 599130
+"http://dbpedia.org/ontology/Athlete", 534604
+"http://www.wikidata.org/entity/Q486972", 530146
+"http://dbpedia.org/ontology/Settlement", 530146
+"http://dbpedia.org/ontology/OrganisationMember", 456914
+"http://dbpedia.org/ontology/SportsTeamMember", 456914
+"http://dbpedia.org/ontology/PersonFunction", 378395
+"http://www.wikidata.org/entity/Q24229398", 372872
+"http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Agent", 372872
+"http://dbpedia.org/ontology/Agent", 372872
+"http://dbpedia.org/ontology/Tenure", 358117
+"http://schema.org/Organization", 352131
+"http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#SocialPerson", 352131
+"http://dbpedia.org/ontology/Organisation", 352131
+"http://www.wikidata.org/entity/Q43229", 352131
+"http://dbpedia.org/ontology/ArchitecturalStructure", 265739
+"http://www.wikidata.org/entity/Q2188189", 245177
+"http://dbpedia.org/ontology/MusicalWork", 245177
+"http://dbpedia.org/ontology/Village", 218968
+"http://www.wikidata.org/entity/Q532", 218968
+"http://www.wikidata.org/entity/Q82955", 200765
+"http://dbpedia.org/ontology/Politician", 200765
+"http://www.wikidata.org/entity/Q937857", 171544
+"http://dbpedia.org/ontology/SoccerPlayer", 171544
+"http://schema.org/MusicAlbum", 159425
+"http://www.wikidata.org/entity/Q482994", 159425
+"http://dbpedia.org/ontology/Album", 159425
+"http://dbpedia.org/ontology/Film", 148445
+"http://www.wikidata.org/entity/Q11424", 148445
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+69501.8264248705, 1, 110, 369, 681, 1631, 2849, 5019, 10021, 24842, 69341, 245177, 1957965, 5465152, 5465152
+STATUS
+"Count of all entities"
+count (all nodes)
+32177705
+STATUS
+"Count of entities with wikilinks"
+count (nodes with wikilinks)
+28666787
+STATUS
+"Count of entities with mutual wikilinks"
+count (nodes with mutual wikilinks)
+0
+STATUS
+"Distribution of number of other properties connecting a pair that is also wikilinked (one sided count)"
+mean, min, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99, 0.999, max
+0.11460708215500066, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 9
+
+[08:37:15] * Done!
+
