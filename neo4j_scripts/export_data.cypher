@@ -25,7 +25,6 @@ RETURN file, source, format, nodes, relationships, properties, time, rows, batch
 // property triples of mutually wikilinked entity pairs
 // these triples do not contain wikilinks themselves
 // only if just one entity links the other with one or more properties, the other entity doesn't
-// note: this dataset can also be used to generate "placeholder" triples for the entity that does not link the other
 
 WITH "
     MATCH (a:Resource)-[r:mutual_wikilinks]->(b:Resource)
