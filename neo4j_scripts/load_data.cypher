@@ -21,7 +21,7 @@ CALL n10s.graphconfig.init({
 RETURN "Load ontology dataset..." AS `STATUS: `;
 
 CALL n10s.rdf.import.fetch(
-    "file:///var/lib/neo4j/raw_data/ontology--DEV_type=parsed.nt",
+    "file:///var/lib/neo4j/raw_data/ontology--DEV_type=parsed_sorted.nt",
     "N-Triples",
     {verifyUriSyntax: false}
 );
